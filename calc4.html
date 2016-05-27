@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JulCalc4</title>
+    <style>
+        *{
+            margin: 0px;
+            padding: 0px;
+        }
+        header#topHeader{
+            height: 60px;
+            background-color: rgba(20,60,100,1);
+            cursor: url(Busy.ani);
+        }
+        div#calcHolder{
+            width: 300px;
+            background-color: rgba(20,60,100,1);
+            padding: 20px;
+            margin: 0 auto;
+            border-radius: 8px 30px;
+            /*border: 2px solid rgba(20,60,100,1);*/
+            /*box-shadow: 8px 8px rgba(200,200,200,.5);*/
+        }
+        div#screenHolder{
+            width: 300px;
+            background-color: rgba(255,255,255,1);
+            height: 60px;
+            margin: 0 auto;
+            border-radius: 8px;
+        }
+        div#screenHolder input{
+            width: 300px;
+            height: 30px;
+            border: none;
+            outline: none;
+            font-size: 18px;
+            text-indent: 4px;
+            background-color: transparent;
+        }
+        div#screenHolder input#outputScreen{
+            text-align: right;
+        }
+        div#controls{
+            width: 300px;
+            margin: 4px auto;
+        }
+        div#controls button{
+            outline: none;
+            border: none;
+            /*padding: 2px 4px;*/
+            width: 40px;
+            height: 24px;
+            margin: 2px;
+            cursor: pointer;
+            float: left;
+            /*font-family: monospace sans-serif cursive;*/
+            border-radius: 100%;
+            border-radius: 4px;
+        }
+        div#controls button:hover{
+            background-color: rgba(180,180,180,1);
+        }
+        div#digits{
+            width: 140px;
+            float: left;
+        }
+        div#operators{
+            width: 160px;
+            float: left;
+        }
+        div#operators button#clearScreen{
+            background-color: rgba(200,20,20,1);
+            color: rgba(255,255,255,1);
+        }
+        div#operators button#delScreen{
+            background-color: rgba(20,200,20,1);
+            color: rgba(255,255,255,1);
+        }
+        div#version{
+            color: rgba(255,255,255,1);
+            /*font-family: tahoma;*/
+            margin-bottom: 4px;
+            margin-top: 0px;
+        }
+        @media screen and (max-width:500px){
+            div#calcHolder{
+                width: 100%;
+            }
+            header#topHeader{
+                height: 0px;
+            }
+        }
+        
+    </style>
+    <link rel="icon" href="calc4.png">
+</head>
+<body>
+    <header id="topHeader">
+        
+    </header>
+    <div id="calcHolder">
+        <div id="version"><tt>JulCASIO version 1.2</tt></div>
+        <div id="screenHolder">
+            <input type="text" id="inputScreen" autofocus="autofocus">
+            <input type="text" id="outputScreen" readonly="readonly">
+        </div>
+        <div id="controls">
+            <div id="digits">
+                <button id="ix" function="9" type="button">9</button>
+                <button id="viii" function="8" type="button">8</button>
+                <button id="vii" function="7" type="button">7</button>
+                <button id="vi" function="6" type="button">6</button>
+                <button id="v" function="5" type="button">5</button>
+                <button id="iv" function="4" type="button">4</button>
+                <button id="iii" function="3" type="button">3</button>
+                <button id="ii" function="2" type="button">2</button>
+                <button id="i" function="1" type="button">1</button>
+                <button id="o" function="0" type="button">0</button>
+                <button id="dot" function="." type="button">.</button>
+                <button id="ansa" type="button">Ansa</button>
+                <div style="clear: both;"></div>
+            </div>
+            <div id="operators">
+                <button id="clearScreen" type="button">C</button>
+                <button id="delScreen" type="button">DEL</button>
+                <!--<button id="subtract" function="-" type="button">-</button>-->
+                <button id="add" function="+" type="button">+</button>
+                <button id="subtract" function="-" type="button">-</button>
+                <button id="multiply" function="*" type="button">*</button>
+                <button id="divide" function="/" type="button">/</button>
+                <button id="sqrt" type="button">&radic;</button>
+                <button id="pi" type="button">&pi;</button>
+                <button id="e"  type="button">e</button>
+                <button id="perm"  type="button" title="Permutation"><sub>n</sub>P<sub>r</sub></button>
+                <button id="comb"  type="button" title="Combination"><sub>n</sub>C<sub>r</sub></button>
+                <div style="clear: both;"></div>
+            </div>
+            <div style="clear: both;"></div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         *  In this version, I have added the Factorial, Permutation, Combination functions - wow its excellent
+         *  and the statistics functions can now intake both a string and arguments
+         *  There are also rand(min,max) and rand(max) functions
+         *  now(), chi2(), today(), time()
+         * /
+        /**
+        *  First, I create my house-keeping functions
+        */
+        function $_(selector) {
+            return window.document.querySelector(selector);
+        }
+        function $_id(id){
+             return window.document.getElementById(id);
+        }
+        function $_getFrame(frameName) {
+            return window.frames[frameName];
+        }
+        function $_all(selector) {
+            return window.document.querySelectorAll(selector);
+        }
+        function $_aEL(selector,eventT,eventL,useCapture) {
+            if (window.addEventListener) {
+                if (selector === window || selector.toLowerCase() == "window") {
+                    if (useCapture) {
+                        return window.addEventListener(eventT,eventL,useCapture);
+                    }else{
+                        return window.addEventListener(eventT,eventL);
+                    }
+                }else if (selector === document || selector.toLowerCase() == "document") {
+                    if (useCapture) {
+                        return document.addEventListener(eventT,eventL,useCapture);
+                    }else{
+                        return document.addEventListener(eventT,eventL);
+                    }
+                }else{
+                    if (useCapture) {
+                        return window.document.querySelector(selector).addEventListener(eventT,eventL,useCapture);
+                    }else{
+                        return window.document.querySelector(selector).addEventListener(eventT,eventL);
+                    }
+                }
+            }else if (window.attachEvent) {
+                if (selector === window) {
+                    if (useCapture) {
+                        return window.attachEvent("on"+eventT.trim(),eventL,useCapture);
+                    }else{
+                        return window.attachEvent("on"+eventT.trim(),eventL);
+                    }
+                }else if (selector === document) {
+                    if (useCapture) {
+                        return document.attachEvent(eventT,eventL,useCapture);
+                    }else{
+                        return document.attachEvent(eventT,eventL);
+                    }
+                }else{
+                    if (useCapture) {
+                        return window.document.querySelector(selector).attachEvent("on"+eventT.trim(),eventL,useCapture);
+                    }else{
+                        return window.document.querySelector(selector).attachEvent("on"+eventT.trim(),eventL);
+                    }
+                }
+            }
+        }
+        
+        // This happens immediately the document is fully loaded -
+        // I clear the screen and set focus on the inputScreen
+        $_aEL(window,"load",function(){
+            $_("input#inputScreen").focus();
+            $_("input#inputScreen").value = "";
+            $_("input#outputScreen").value = "";
+        },false);
+        
+        // I get all buttons that add digits and characters to the inputScreen
+        var buttonAr = $_all("div#controls button[function]");
+        
+        // I add event liseners to all digit buttons - there is a huge difference with previous versions where i had to make an array of buttons ids in order for it to work
+        // I also added some extra logic and thats all I wanted wanted
+        for (var i = 0; i < buttonAr.length; i++) {
+            /*buttonAr[i].addEventListener("click",function(event){
+                $_("input#inputScreen").value += event.target.getAttribute("function");  
+            },false);
+            */
+            $_aEL("#"+buttonAr[i].getAttribute("id").trim(),"click",function(event){
+                $_("input#inputScreen").value += event.target.getAttribute("function"); 
+            },false);
+        }
+        
+        //Setting ToolTips
+        for (var i = 0; i < buttonAr.length; i++) {
+            $_("#"+buttonAr[i].getAttribute("id").trim()).setAttribute("title",buttonAr[i].getAttribute("function"))
+        }
+        
+        
+        //Getting Ansa after the ansa button is clicked
+        $_aEL("button#ansa","click",function(){
+            function getAnsa() {
+                var ansa;
+                var expression = $_("input#inputScreen").value.trim().toUpperCase();
+                if (expression.length > 0) {
+                    try{
+                        ansa = eval(expression);
+                    }catch(error){
+                        ansa = error.toString();
+                    }
+                    return ansa;
+                }else{
+                    return null;
+                }
+            }
+            $_("input#outputScreen").value = getAnsa();
+        },false);
+        
+        //clearing the screen
+        $_aEL("button#clearScreen","click",function(){
+            $_("input#inputScreen").value = "";
+            $_("input#outputScreen").value = "";
+        },false);
+        
+        // Delete mechanism - backspace
+        $_aEL("button#delScreen","click",function(){
+            var originalString =  $_("input#inputScreen").value;
+            var newString = originalString.substr(0,(originalString.length - 1));
+            $_("input#inputScreen").value = newString;
+        },false);
+        
+        //Enter mechanism
+        $_aEL(window,"keydown",function(event){
+            if (event.keyCode === 13) {
+                $_("button#ansa").focus();
+                $_("button#ansa").click();
+            }
+        },false);
+        
+        //PI mechanism
+        $_aEL("button#pi","click",function(){
+            $_("input#inputScreen").value += Math.PI;    
+        },false);
+        
+        //E mechanism
+        $_aEL("button#e","click",function(){
+            $_("input#inputScreen").value += Math.E;    
+        },false);
+        
+        //sqrt mechanism
+        $_aEL("button#sqrt","click",function(){
+            $_("input#outputScreen").value = Math.sqrt(eval($_("input#inputScreen").value.toUpperCase()));    
+        },false);
+        
+        // Permutation mechanism
+        $_aEL("button#perm","click",function(){
+            $_("input#inputScreen").value += " perm(n,r) ";    
+        },false);
+        
+        // Combination mechanism
+        $_aEL("button#comb","click",function(){
+            $_("input#inputScreen").value += " comb(n,r) ";    
+        },false);
+        
+        //Now into some maths constants and functions PI,E,COS(),SIN(),TAN(),ACOS,ATAN,SQRT(),POW(number,power),CEIL(),FLOOR(),ROUND(),DEG2RAD,RAD2DEG,ABS,
+        var PI = Math.PI;
+        var E = Math.E;
+        function DEG2RAD(deg){
+            return deg * Math.PI / 180;
+        }
+        function COS(deg) {
+            if (deg === 90) {
+                return 0;
+            }else{
+                return Math.cos(DEG2RAD(deg));
+            }
+        }
+        function SIN(deg) {
+            var sin;
+            try{
+                sin = Math.sin(DEG2RAD(deg));
+            }catch(error){
+                sin = error.toString();
+            }
+            return sin;
+        }
+        function TAN(deg) {
+             var tan;
+            try{
+                tan = Math.tan(DEG2RAD(deg));
+            }catch(error){
+                tan = error.toString();
+            }
+            return tan;
+        }
+        function ACOS(deg) {
+            var acos;
+            try{
+                acos = Math.acos(DEG2RAD(deg));
+            }catch(error){
+                acos = error.toString();
+            }
+            return acos;
+        }
+        function ATAN(deg) {
+            var atan;
+            try{
+                atan = Math.atan(DEG2RAD(deg));
+            }catch(error){
+                atan = error.toString();
+            }
+            return atan;
+        }
+        function SQRT(number) {
+            var sqrt;
+            try{
+                sqrt = Math.sqrt(number);
+            }catch(error){
+                sqrt = error.toString();
+            }
+            return sqrt;
+        }
+        function POW(number,power) {
+            return Math.pow(number,power);
+        }
+        function CEIL(number) {
+            return Math.ceil(number);
+        }
+        function FLOOR(number){
+            return Math.floor(number);
+        }
+        function EXP(number) {
+            return Math.exp(number);
+        }
+        function ROUND(number) {
+            return Math.round(number);
+        }
+        function LOG(number) {
+            return Math.log(number);
+        }
+        function RANDOM() {
+            return Math.random();
+        }
+        function MOD(numerator, denominator) {
+            return numerator % denominator;
+        }
+        function RAND(min,max) {
+            var b2in = (Math.random() * max + min) - min ;
+            //b2in = (b2in < min) ? Math.random() * max + min - min : b2in;
+            //b2in = (b2in > max) ? Math.random() * max + min - min : b2in;
+            if (b2in > max) {
+                while(b2in > max){
+                    b2in = (Math.random() * max + min) - min;
+                }
+            }
+            if (b2in < min) {
+                while(b2in < min){
+                    b2in = (Math.random() * max + min) - min;
+                }
+            }
+            return Math.round(b2in);
+        }
+        function RAND2(min,max) { // Function complete and working perfectly
+            var b2in;
+            if (min) {
+                if (max) {
+                    b2in = Math.round((Math.random() * max) + min);
+                    if (b2in > max) {
+                        while (b2in > max) {
+                            b2in = Math.round((Math.random() * max) + min);
+                        }
+                    }
+                    if (b2in < min) {
+                        while (b2in < min) {
+                            b2in = Math.round((Math.random() * max) + min);
+                        }
+                    }
+                }else{
+                    b2in = Math.round(Math.random() * min);
+                } 
+            }else{
+                b2in = Math.random();
+            }
+            return b2in;
+        }
+        //This is the function that handles factorials
+        function FACT(number) {// I cant believe that I finally made it
+            var factorial = 1, myDigits = new Array();
+            while(number > 0){
+                myDigits.push(number--);
+            }
+            for(var i = 0; i < myDigits.length; i++){
+                factorial *= myDigits[i];
+            }
+            return factorial;
+        }
+        //This is the function that handles permutations
+        function PERM(n, k) {
+            var permunation = FACT(n) / FACT(n-k);
+            return permunation;
+        }
+        //This function will handle combination
+        function COMB(n,k) {
+            return PERM(n,k) / FACT(k);
+        }
+        var FCT = FACT;
+        var PERMUTATION = PERM;
+        // Statistics functions - sum,meanSample,meanPop,range,stdevSamp,stdevPop,varianceSamp,variancePop,
+        
+        //Time functions
+        function TIME(hourSystem) {
+            var myDate = new Date();
+            var myHour = myDate.getHours();
+            var myMin = (myDate.getMinutes() < 10) ? "0" + myDate.getMinutes() : myDate.getMinutes();
+            var mySecs = (myDate.getSeconds() < 10) ? "0" + myDate.getSeconds() : myDate.getSeconds();
+            var diem = "AM";
+            var time = "";
+            if (myHour >= 12) {
+                diem = "PM";
+            }
+            if (hourSystem) {
+                if (hourSystem.toUpperCase() === "MILITARY" || hourSystem.toUpperCase() === "M") {
+                    if (myHour < 10) {
+                        myHour = "0" + myHour;
+                    }
+                    time = myHour + ":" + myMin + ":" + mySecs;
+                }
+            }else{
+                if (myHour > 12) {
+                    myHour = myHour - 12;
+                }
+                time = myHour + ":" + myMin + " " + diem;
+            }
+            
+            return time;
+        }
+        function NOW(format) {
+            var now;
+            var daysOfTheWeek = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+            var monthsOfTheYear = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+            //var dateSup = ["st","nd","rd","th","th","th","th","th","th","th"];
+            var dateSup = "";
+            var myDate = new Date();
+            var myHour = myDate.getHours();
+            var myMin = (myDate.getMinutes() < 10) ? "0" + myDate.getMinutes() : myDate.getMinutes();
+            var mySecs = (myDate.getSeconds() < 10) ? "0" + myDate.getSeconds() : myDate.getSeconds();
+            var myDay = myDate.getDay(); // gets the day of the week indexed from 0 - 6
+            var myMonth = myDate.getMonth(); // gets the month indexed from 0
+            var myYear = myDate.getFullYear(); // gets the year in full e.g. 2015
+            var myD = myDate.getDate(); // gets the date i.e 14
+            //alert(daysOfTheWeek[myDay]+"/"+monthsOfTheYear[myMonth]+"/"+myYear);
+            switch(myD){
+                case 1:
+                    dateSup = "st";
+                    break;
+                case 2:
+                    dateSup = "nd";
+                    break;
+                case 3:
+                    dateSup = "rd";
+                    break;
+                case 21:
+                    dateSup = "st";
+                    break;
+                case 22:
+                    dateSup = "nd";
+                    break;
+                case 23:
+                    dateSup = "rd";
+                    break;
+                case 31:
+                    dateSup = "st";
+                    break;
+                default:
+                    dateSup = "th";
+                    break;
+            }
+            if (format) {
+                if (format.toUpperCase() == "FULL") {
+                    now = daysOfTheWeek[myDay] + ", " + myD +  dateSup + " " + monthsOfTheYear[myMonth] + ", " + myYear + ", " + myHour + ":" + myMin + ":" + mySecs;
+                }
+            }else{
+                now = daysOfTheWeek[myDay] + ", " + myD + "/" + (myMonth + 1) + "/" + myYear + ", " + myHour + ":" + myMin + ":" + mySecs;
+            }
+            
+            return now;
+        }
+        
+        function TODAY(format) {
+            var today;
+            var daysOfTheWeek = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+            var monthsOfTheYear = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+            //var dateSup = ["st","nd","rd","th","th","th","th","th","th","th"];
+            var dateSup = "";
+            var myDate = new Date();
+            var mySecs = (myDate.getSeconds() < 10) ? "0" + myDate.getSeconds() : myDate.getSeconds();
+            var myDay = myDate.getDay();
+            var myMonth = myDate.getMonth();
+            var myYear = myDate.getFullYear();
+            var myD = myDate.getDate();
+            //alert(daysOfTheWeek[myDay]+"/"+monthsOfTheYear[myMonth]+"/"+myYear);
+            switch(myD){
+                case 1:
+                    dateSup = "st";
+                    break;
+                case 2:
+                    dateSup = "nd";
+                    break;
+                case 3:
+                    dateSup = "rd";
+                    break;
+                case 21:
+                    dateSup = "st";
+                    break;
+                case 22:
+                    dateSup = "nd";
+                    break;
+                case 23:
+                    dateSup = "rd";
+                    break;
+                case 31:
+                    dateSup = "st";
+                    break;
+                default:
+                    dateSup = "th";
+                    break;
+            }
+            if (format) {
+                if (format.toUpperCase() == "FULL") {
+                    today = daysOfTheWeek[myDay] + ", " + myD +  dateSup + " " + monthsOfTheYear[myMonth] + ", " + myYear;
+                }
+            }else{
+                today = daysOfTheWeek[myDay] + ", " + myD + "/" + (myMonth + 1) + "/" + myYear;
+            }
+            
+            return today;
+        }
+        
+        function SUM(data) {
+            var sum = 0;
+            if (typeof data === "string") {
+                var realData;
+                if (data.trim().indexOf("," ) == 0) {
+                    while (data.trim().indexOf("," ) == 0) {
+                        data = data.substring(1,data.length-1);
+                    }
+                }
+                if (data.trim().lastIndexOf("," ) == (data.length-1)) {
+                    while (data.trim().lastIndexOf("," ) == (data.length-1)) {
+                        data = data.substring(0,data.length-1);
+                    }
+                }
+                var realData = data.split(",");
+                for (var i = 0; i < realData.length; i ++) {
+                    sum += Number(realData[i]);
+                }
+            }else{
+                for (var i = 0; i <  arguments.length; i++) {
+                    sum += Number(arguments[i]);
+                }
+            }
+            if (isNaN(sum)) {
+                alert("Your dataset contains non-numeric characters");
+                return 0;
+            }else{
+                return sum;
+            }
+        }
+        function MEAN(data) {
+            var sum = 0, mean;
+            if (typeof data == "string") {
+                if (data.trim().indexOf(",") == 0) {
+                    while (data.trim().indexOf(",") == 0) {
+                        data = data.substr(1, (data.length - 1));
+                    }
+                }
+                if (data.trim().lastIndexOf(",") == data.length-1) {
+                    while (data.trim().lastIndexOf(",") == data.length-1) {
+                        data = data.substr(0, (data.length - 1));
+                    }
+                }
+                realData = data.split(",");
+                for(var i = 0; i < realData.length; i++){
+                    sum += Number(realData[i]);
+                }
+                try{
+                    mean = sum / realData.length;
+                }catch(e){
+                    mean = e;
+                }
+            }else{
+                for(var i = 0; i < arguments.length; i++){
+                    sum += arguments[i];
+                }
+                mean = sum / arguments.length;
+            }
+            if (isNaN(mean)) {
+                alert("Your dataset contains non-numeric characters");
+                return 0;
+            }else{
+                return mean;
+            }
+        }
+        function MEAN_S(data) {
+            var sum = 0, mean;
+            if (typeof data == "string") {
+                if (data.trim().indexOf(",") == 0) {
+                    while (data.trim().indexOf(",") == 0) {
+                        data = data.substr(1, (data.length - 1));
+                    }
+                }
+                if (data.trim().lastIndexOf(",") == data.length-1) {
+                    while (data.trim().lastIndexOf(",") == data.length-1) {
+                        data = data.substr(0, (data.length - 1));
+                    }
+                }
+                realData = data.split(",");
+                for(var i = 0; i < realData.length; i++){
+                    sum += Number(realData[i]);
+                }
+                try{
+                    mean = sum / (realData.length - 1);
+                }catch(e){
+                    mean = e;
+                }
+            }else{
+                for(var i = 0; i < arguments.length; i++){
+                    sum += arguments[i];
+                }
+                mean = sum / (arguments.length - 1);
+            }
+            if (isNaN(mean)) {
+                alert("Your dataset contains non-numeric characters");
+                return 0;
+            }else{
+                return mean;
+            }
+        }
+        function STDEV(data) {
+            var mean, sumSqrd = 0, sum = 0, stdev, realData , newRealData = new Array();
+            if (typeof data === "string") {
+                if (data.trim().indexOf(",") == 0) {
+                    while (data.trim().indexOf(",") == 0) {
+                        data = data.substring(1,(data.length- 1));
+                    }
+                }
+                if (data.trim().lastIndexOf(",") == (data.length - 1)) {
+                    while (data.trim().lastIndexOf(",") == data.length - 1) {
+                        data = data.substring(0, (data.length - 1));
+                    }
+                }
+                realData = data.split(",");
+                for(var i = 0; i < realData.length; i++){
+                    if (!isNaN(realData[i]) && realData[i].trim().length > 0) {
+                        newRealData.push(realData[i]);
+                    }
+                }
+                for (var i = 0; i < newRealData.length; i++) {
+                    sum += Number(newRealData[i]);
+                }
+                mean = sum / newRealData.length;
+                for(var i = 0; i < newRealData.length; i++){
+                    sumSqrd += Math.pow((Number(newRealData[i]) - mean), 2);
+                }
+                stdev = Math.sqrt(sumSqrd / newRealData.length);
+                return stdev;
+            }else{
+                try{
+                    for(var i = 0; i < arguments.length; i++){
+                        sum += arguments[i];
+                    }
+                    mean = sum / arguments.length;
+                    for (var i = 0; i < arguments.length; i++) {
+                        sumSqrd += Math.pow((arguments[i] - mean),2);
+                    }
+                    stdev = Math.sqrt(sumSqrd /  arguments.length);
+                    return stdev;
+                }catch(error){
+                    alert(error);
+                }
+            } 
+        }
+        STDEV_P = STDEV;
+        function VAR(data) {
+            var mean, sumSqrd = 0, sum = 0, variance, realData , newRealData = new Array();
+            if (typeof data === "string") {
+                if (data.trim().indexOf(",") == 0) {
+                    while (data.trim().indexOf(",") == 0) {
+                        data = data.substring(1,(data.length- 1));
+                    }
+                }
+                if (data.trim().lastIndexOf(",") == (data.length - 1)) {
+                    while (data.trim().lastIndexOf(",") == data.length - 1) {
+                        data = data.substring(0, (data.length - 1));
+                    }
+                }
+                realData = data.split(",");
+                for(var i = 0; i < realData.length; i++){
+                    if (!isNaN(realData[i]) && realData[i].trim().length > 0) {
+                        newRealData.push(realData[i]);
+                    }
+                }
+                for (var i = 0; i < newRealData.length; i++) {
+                    sum += Number(newRealData[i]);
+                }
+                mean = sum / newRealData.length;
+                for(var i = 0; i < newRealData.length; i++){
+                    sumSqrd += Math.pow((Number(newRealData[i]) - mean), 2);
+                }
+                variance = sumSqrd / newRealData.length;
+                return variance;
+            }else{
+                try{
+                    for(var i = 0; i < arguments.length; i++){
+                        sum += arguments[i];
+                    }
+                    mean = sum / arguments.length;
+                    for (var i = 0; i < arguments.length; i++) {
+                        sumSqrd += Math.pow((arguments[i] - mean),2);
+                    }
+                    variance = sumSqrd /  arguments.length;
+                    return variance;
+                }catch(error){
+                    alert(error);
+                }
+            } 
+        }
+        VAR_P = VAR;
+        function STDEV_S(data) {
+            var mean, sumSqrd = 0, sum = 0, stdev, realData , newRealData = new Array();
+            if (typeof data === "string") {
+                if (data.trim().indexOf(",") == 0) {
+                    while (data.trim().indexOf(",") == 0) {
+                        data = data.substring(1,(data.length- 1));
+                    }
+                }
+                if (data.trim().lastIndexOf(",") == (data.length - 1)) {
+                    while (data.trim().lastIndexOf(",") == data.length - 1) {
+                        data = data.substring(0, (data.length - 1));
+                    }
+                }
+                realData = data.split(",");
+                for(var i = 0; i < realData.length; i++){
+                    if (!isNaN(realData[i]) && realData[i].trim().length > 0) {
+                        newRealData.push(realData[i]);
+                    }
+                }
+                for (var i = 0; i < newRealData.length; i++) {
+                    sum += Number(newRealData[i]);
+                }
+                mean = sum / newRealData.length;
+                for(var i = 0; i < newRealData.length; i++){
+                    sumSqrd += Math.pow((Number(newRealData[i]) - mean), 2);
+                }
+                stdev = Math.sqrt(sumSqrd / (newRealData.length -1));
+                return stdev;
+            }else{
+                try{
+                    for(var i = 0; i < arguments.length; i++){
+                        sum += arguments[i];
+                    }
+                    mean = sum / arguments.length;
+                    for (var i = 0; i < arguments.length; i++) {
+                        sumSqrd += Math.pow((arguments[i] - mean),2);
+                    }
+                    stdev = Math.sqrt(sumSqrd /  (arguments.length - 1));
+                    return stdev;
+                }catch(error){
+                    alert(error);
+                }
+            } 
+        }
+        function VAR_S(data) {
+            var mean, sumSqrd = 0, sum = 0, variance, realData , newRealData = new Array();
+            if (typeof data === "string") {
+                if (data.trim().indexOf(",") == 0) {
+                    while (data.trim().indexOf(",") == 0) {
+                        data = data.substring(1,(data.length- 1));
+                    }
+                }
+                if (data.trim().lastIndexOf(",") == (data.length - 1)) {
+                    while (data.trim().lastIndexOf(",") == data.length - 1) {
+                        data = data.substring(0, (data.length - 1));
+                    }
+                }
+                realData = data.split(",");
+                for(var i = 0; i < realData.length; i++){
+                    if (!isNaN(realData[i]) && realData[i].trim().length > 0) {
+                        newRealData.push(realData[i]);
+                    }
+                }
+                for (var i = 0; i < newRealData.length; i++) {
+                    sum += Number(newRealData[i]);
+                }
+                mean = sum / newRealData.length;
+                for(var i = 0; i < newRealData.length; i++){
+                    sumSqrd += Math.pow((Number(newRealData[i]) - mean), 2);
+                }
+                variance = sumSqrd / (newRealData.length - 1);
+                return variance;
+            }else{
+                try{
+                    for(var i = 0; i < arguments.length; i++){
+                        sum += arguments[i];
+                    }
+                    mean = sum / arguments.length;
+                    for (var i = 0; i < arguments.length; i++) {
+                        sumSqrd += Math.pow((arguments[i] - mean),2);
+                    }
+                    variance = sumSqrd /  (arguments.length - 1);
+                    return variance;
+                }catch(error){
+                    alert(error);
+                }
+            } 
+        }
+        //Wrtten it but exeriencing some problem
+        function RANGE(data) {
+            var range, realData, newRealData = new Array();
+            if (typeof data === "string") {
+                realData = data.split(",");
+                for(var i = 0; i < realData.length; i++){
+                    if (!isNaN(realData[i]) && realData[i].trim().length > 0) {
+                        newRealData.push(realData[i]);
+                    }
+                }
+                newRealData = newRealData.sort();
+                range = Number(newRealData[newRealData.length -1]) - Number(newRealData[0]);
+                //range = Number(newRealData.pop()) - Number(newRealData.shift());
+            }else{
+                for (var i = 0; i < arguments.length; i++) {
+                    newRealData.push(arguments[i]);
+                }
+                newRealData = newRealData.sort();
+                range = Number(newRealData[newRealData.length -1]) - Number(newRealData[0]);
+                //range = Number(newRealData.pop()) - Number(newRealData.shift());
+            }
+            alert(newRealData)
+            return range;
+        }
+        
+        function CHI2(observed, expected) {
+            var chi2 = 0; 
+            if (typeof observed === "object" && typeof expected === "object") {
+                if (observed.length === expected.length) {
+                    for(var i in observed){
+                        chi2 += Math.pow((observed[i] - expected[i]),2) / expected[i];
+                    }
+                }else{
+                    alert("No of expected results is not equal to the obsrved");
+                }
+            }else if (typeof observed == "string" && typeof expected == "string") {
+                if (observed.trim().indexOf(",") === 0) {
+                    while(observed.trim().indexOf(",") === 0){
+                        observed = observed.substring(1,(observed.length -1));
+                    }
+                }
+                if (observed.trim().lastIndexOf(",") === (observed.length -1)) {
+                    while (observed.trim().lastIndexOf(",") === (observed.length -1)) {
+                        observed = observed.substring(0,(observed.length -1));
+                    }
+                }
+                if (expected.trim().indexOf(",") === 0) {
+                    while(expected.trim().indexOf(",") === 0){
+                        expected = expected.substring(1,(expected.length -1));
+                    }
+                }
+                if (expected.trim().lastIndexOf(",") === (expected.length -1)) {
+                    while (expected.trim().lastIndexOf(",") === (expected.length -1)) {
+                        expected = expected.substring(0,(expected.length -1));
+                    }
+                }
+                var obsArray = observed.split(",");
+                var expArray = expected.split(",");
+                var realObsArray = new Array();
+                var realExpArray = new Array();
+                
+                for (var i in obsArray) {
+                    if (!isNaN(obsArray[i])) {
+                        realExpArray.push(obsArray[i]);
+                    }
+                }
+                for (var i in expArray) {
+                    if (!isNaN(expArray[i])) {
+                        realObsArray.push(expArray[i]);
+                    }
+                }
+                if (realObsArray.length === realExpArray.length) {
+                    for(var i in realObsArray){
+                        chi2 += Math.pow((realObsArray[i] - realExpArray[i]),2) / realExpArray[i];
+                    }
+                }
+            }
+            return chi2;
+        }
+        X2 = CHI2;
+        var JULIUS = "The owner of this calc   ";
+    </script>
+</body>
+</html>
